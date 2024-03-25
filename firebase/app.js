@@ -96,7 +96,7 @@ if (signInForm) {
             .then((userCredential) => {
                 console.log('User signed in');
                 // Redirect to a blank page upon successful sign-in
-                window.location.href = '/Users/damonching/Downloads/Comp231_HealthcareSearcher/Comp231_HealthcareSearcher/index.html'; // Ensure you have a blank.html file
+                window.location.href = 'index.html'; // Ensure you have a blank.html file
             })
             .catch((error) => {
                 console.error(error);
