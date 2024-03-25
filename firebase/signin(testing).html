@@ -1,0 +1,33 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <link rel="stylesheet" href="firebase.css"> <!-- Make sure this points to your CSS file -->
+</head>
+
+<body>
+    <h2>Sign In</h2>
+    <form id="signin-form">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Sign In</button>
+    </form>
+    <!-- Link to Register Page -->
+    <div class="register-link">
+        <p>Don't have an account? <a href="register.html">Register here</a></p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-auth.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script> <!-- Make sure this points to your JavaScript file -->
+</body>
+
+
+
+</html>

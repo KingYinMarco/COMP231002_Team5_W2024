@@ -1,0 +1,70 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 250px;
+}
+
+input,
+select,
+button {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#password-strength-meter {
+    height: 10px;
+    background: #ddd;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
+.password-strength-weak {
+    width: 33%;
+    background-color: red;
+}
+
+.password-strength-medium {
+    width: 66%;
+    background-color: orange;
+}
+
+.password-strength-strong {
+    width: 100%;
+    background-color: green;
+}
+
+.register-link {
+    margin-top: 20px;
+}
+
+.register-link a {
+    color: #007bff;
+    text-decoration: none;
+    /* Optional: removes the underline from the link */
+}
+
+.register-link a:hover {
+    text-decoration: underline;
+    /* Optional: adds an underline on hover for better UX */
+}
