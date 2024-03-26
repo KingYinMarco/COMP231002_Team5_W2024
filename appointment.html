@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Booking System</title>
+    <style>
+        .container {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px;
+        }
+        .container label, .container select, .container input[type="text"] {
+            display: block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Appointment Booking System</h1>
+        
+        <div>
+            <label for="name">Your Name:</label>
+            <input type="text" id="name" required>
+        </div>
+
+        <div>
+            <label for="email">Your Email:</label>
+            <input type="email" id="email" required>
+        </div>
+
+        <div>
+            <label for="department">Select Department:</label>
+            <select id="department" onchange="populateProviders()">
+                <option value="">Select Department</option>
+                <option value="Cardiology">Cardiology</option>
+                <option value="Dermatology">Dermatology</option>
+                <option value="Gastroenterology">Gastroenterology</option>
+                <option value="Neurology">Neurology</option>
+                <option value="Orthopedics">Orthopedics</option>
+                <option value="Pediatrics">Pediatrics</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="date">Select Date:</label>
+            <input type="date" id="date" onchange="populateProviders()">
+        </div>
+
+        <div>
+            <label for="time">Select Time:</label>
+            <select id="time">
+                <option value="">Select Time</option>
+                <option value="09:00">9:00 AM</option>
+                <option value="10:00">10:00 AM</option>
+                <option value="11:00">11:00 AM</option>
+                <option value="12:00">12:00 PM</option>
+                <option value="13:00">1:00 PM</option>
+                <option value="14:00">2:00 PM</option>
+                <option value="15:00">3:00 PM</option>
+                <option value="16:00">4:00 PM</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="provider">Select Healthcare Provider:</label>
+            <select id="provider">
+                <option value="">Select Provider</option>
+            </select>
+        </div>
+
+        <div>
+            <input type="checkbox" id="sendEmail">
+            <label for="sendEmail">Send appointment details via email</label>
+        </div>
+
+        <div>
+            <button onclick="bookAppointment()">Book Appointment</button>
+        </div>
+
+        <div id="confirmation"></div>
+    </div>
+
+    <script>
+        var providersData = {
+            "Cardiology": ["Dr. Smith", "Dr. Johnson"],
+            "Dermatology": ["Dr. Brown", "Dr. Lee"],
+            "Gastroenterology": ["Dr. Garcia", "Dr. Patel"],
+            "Neurology": ["Dr. Williams", "Dr. Anderson"],
+            "Orthopedics": ["Dr. Martinez", "Dr. Thompson"],
+            "Pediatrics": ["Dr. Robinson", "Dr. Clark"]
+        };
+
+        function populateProviders() {
+            var departmentDropdown = document.getElementById("department");
+            var providerDropdown = document.getElementById("provider");
+            var selectedDepartment = departmentDropdown.value;
+
+            providerDropdown.innerHTML = "<option value=''>Select Provider</option>"; // Clear existing options
+
+            // Populate provider dropdown with providers for the selected department
+            if (selectedDepartment && providersData[selectedDepartment]) {
+                var providers = providersData[selectedDepartment];
+                providers.forEach(function(provider) {
+                    var option = document.createElement("option");
+                    option.text = provider;
+                    option.value = provider;
+                    providerDropdown.add(option);
+                });
+            }
+        }
+
+        function bookAppointment() {
+            var name = document.getElementById("name").value;
+            var email = document.getElementById("email").value;
+            var dateInput = document.getElementById("date");
+            var date = new Date(dateInput.value);
+            var time = document.getElementById("time").value;
+            var provider = document.getElementById("provider").value;
+            var sendEmail = document.getElementById("sendEmail").checked;
+
+            // Validate input
+            if (!name || !email || !date || !time || !provider) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            // Create appointment object
+            var appointment = {
+                name: name,
+                email: email,
+                date: dateInput.value,
+                time: time,
+                provider: provider
+            };
+
+            // Save appointment (for demonstration purpose, just display confirmation)
+            var confirmationMsg = "Appointment scheduled for " + appointment.name + ":<br>";
+            confirmationMsg += "<strong>Date:</strong> " + appointment.date + "<br>";
+            confirmationMsg += "<strong>Time:</strong> " + formatTime(appointment.time) + "<br>";
+            confirmationMsg += "<strong>Provider:</strong> " + appointment.provider + "<br>";
+            confirmationMsg += "<strong>Email:</strong> " + appointment.email;
+
+            document.getElementById("confirmation").innerHTML = confirmationMsg;
+
+            // Send email if selected
+            if (sendEmail) {
+                // You can add the code to send email here
+                alert("Email sent to " + appointment.email);
+            }
+        }
+
+        function formatTime(time) {
+            var parts = time.split(':');
+            var hour = parseInt(parts[0]);
+            var period = (hour >= 12) ? 'PM' : 'AM';
+            hour = (hour > 12) ? (hour - 12) : hour;
+            return hour + ':' + parts[1] + ' ' + period;
+        }
+    </script>
+</body>
+</html>
