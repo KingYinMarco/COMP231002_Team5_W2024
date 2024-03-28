@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        label {
+            font-weight: bold;
+        }
+        select {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            appearance: none;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            margin-bottom: 10px;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .provider-details {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .provider-details p {
+            margin-bottom: 10px;
+        }
+        .book-appointment-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .book-appointment-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Provider Search</h1>
+        
+        <!-- Department selection -->
+        <label for="departmentSelect">Select Department:</label>
+        <select id="departmentSelect" onchange="showProviders()">
+            <option value="" selected disabled>Select Department</option>
+            <option value="Cardiology">Cardiology</option>
+            <option value="Dermatology">Dermatology</option>
+            <option value="Gastroenterology">Gastroenterology</option>
+            <option value="Neurology">Neurology</option>
+            <option value="Orthopedics">Orthopedics</option>
+            <option value="Pediatrics">Pediatrics</option>
+        </select>
+
+        <!-- Providers list -->
+        <div id="providersList"></div>
+
+        <!-- Provider details placeholder -->
+        <div class="provider-details" id="providerDetails"></div>
+
+        <!-- Book Appointment Button -->
+        <a href="appointment.html" class="book-appointment-btn" id="bookAppointmentBtn" style="display: none;">Book an Appointment</a>
+    </div>
+
+    <script>
+        // Provider data
+        var providersData = {
+            "Cardiology": ["Dr. Smith", "Dr. Johnson"],
+            "Dermatology": ["Dr. Brown", "Dr. Lee"],
+            "Gastroenterology": ["Dr. Garcia", "Dr. Patel"],
+            "Neurology": ["Dr. Williams", "Dr. Anderson"],
+            "Orthopedics": ["Dr. Martinez", "Dr. Thompson"],
+            "Pediatrics": ["Dr. Robinson", "Dr. Clark"]
+        };
+
+        // Function to display provider details
+        function showProviderDetails(providerName) {
+            // Replace this with actual data retrieval logic
+            var placeholderData = {
+                "Dr. Smith": {
+                    "Name": "Dr. Smith",
+                    "Email": "drsmith@cardiology.com",
+                    "Affiliation": "Hospital X",
+                    "Background": "Cardiologist with 10 years of experience",
+                    "Website": "www.drsmith.com"
+                },
+                "Dr. Johnson": {
+                    "Name": "Dr. Johnson",
+                    "Email": "drjohnson@cardiology.com",
+                    "Affiliation": "Clinic Y",
+                    "Background": "Specializes in pediatric cardiology",
+                    "Website": "www.drjohnsonclinic.com"
+                },
+
+                "Dr. Brown": {
+                    "Name": "Dr. Brown",
+                    "Email": "drbrown@dermatology.com",
+                    "Affiliation": "Clinic Y",
+                    "Background": "Specializes in treatment of the condition of the skin, hair, and nails",
+                    "Website": "www.drbrownclinic.com"
+                }
+                // Add details for other providers as needed
+            };
+
+            var providerDetails = placeholderData[providerName];
+
+            // Display provider details
+            document.getElementById("providerDetails").innerHTML = `
+                <h2>${providerDetails.Name}</h2>
+                <p><strong>Email:</strong> ${providerDetails.Email}</p>
+                <p><strong>Affiliation:</strong> ${providerDetails.Affiliation}</p>
+                <p><strong>Background:</strong> ${providerDetails.Background}</p>
+                <p><strong>Website:</strong> <a href="${providerDetails.Website}" target="_blank">${providerDetails.Website}</a></p>
+            `;
+
+            // Show the "Book Appointment" button
+            document.getElementById("bookAppointmentBtn").style.display = "block";
+        }
+
+        // Function to display providers for selected department
+        function showProviders() {
+            var department = document.getElementById("departmentSelect").value;
+            var providers = providersData[department];
+            var providersListHTML = "<h2>Available Providers</h2>";
+
+            if (providers) {
+                providersListHTML += "<ul>";
+                providers.forEach(function(provider) {
+                    providersListHTML += `<li><a href="#" onclick="showProviderDetails('${provider}')">${provider}</a></li>`;
+                });
+                providersListHTML += "</ul>";
+            } else {
+                providersListHTML = "<p>No providers available for the selected department.</p>";
+            }
+
+            document.getElementById("providersList").innerHTML = providersListHTML;
+            document.getElementById("providerDetails").innerHTML = ""; // Clear provider details when department changes
+            document.getElementById("bookAppointmentBtn").style.display = "none"; // Hide the "Book Appointment" button
+        }
+    </script>
+</body>
+</html> 
