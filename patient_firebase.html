@@ -6,8 +6,9 @@
     <title>Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="firebase/firebase-config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="firebase/firebase-config.js"></script>
    
    <style>
         body {
@@ -49,11 +50,10 @@
     <button onclick="viewEditProfile()"><i class="bi bi-person-circle"></i> View/Edit Profile</button>
     <button onclick="searchProvider()"><i class="bi bi-search"></i> Search Provider</button>
     <button onclick="viewAppointments()"><i class="bi bi-calendar-check"></i> View Appointments</button>
-    <button onclick="bookAppointments()"><i class="bi bi-calendar-day"></i></i> Book Appointments</button>
+    <button onclick="bookAppointments()"><i class="bi bi-calendar-day"></i> Book Appointments</button>
+    <button onclick="signOut()"><i class="bi bi-box-arrow-right"></i> Sign Out</button>
 
     <script>
-      
-
         function viewEditProfile() {
             // Redirect to view/edit profile page
             window.location.href = 'view_edit_profile_patient.html'
@@ -66,16 +66,23 @@
 
         function viewAppointments() {
             // Redirect to view appointments page
-            window.location.href = 'view_appointments.html'; 
+            window.location.href = 'view_appointments_patient.html'; 
         }
-
 
         function bookAppointments() {
             // Redirect to book appointments page
             window.location.href = 'appointment_firebase_patient.html'; 
         }
 
-        
+        function signOut() {
+            firebase.auth().signOut().then(() => {
+                // Sign-out successful.
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                // An error happened.
+                console.error(error);
+            });
+        }
     </script>
 </body>
 </html>
