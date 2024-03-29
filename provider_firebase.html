@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            appearance: none;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        ul li {
+            margin-bottom: 10px;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .provider-details {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .provider-details p {
+            margin-bottom: 10px;
+        }
+        .book-appointment-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .book-appointment-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+         <!-- Home button -->
+        <a href="index.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: left;">&larr; Home</a>
+      
+        <h1>Provider Search</h1>
+        
+        <!-- Department selection -->
+        <label for="departmentSelect">Select Department:</label>
+        <select id="departmentSelect" onchange="showProviders()">
+            <option value="" selected disabled>Select Department</option>
+            <option value="Cardiology">Cardiology</option>
+            <option value="Dermatology">Dermatology</option>
+            <option value="Gastroenterology">Gastroenterology</option>
+            <option value="Neurology">Neurology</option>
+            <option value="Orthopedics">Orthopedics</option>
+            <option value="Pediatrics">Pediatrics</option>
+        </select>
+
+        <!-- Providers list -->
+        <div id="providersList"></div>
+
+        <!-- Provider details placeholder -->
+        <div class="provider-details" id="providerDetails"></div>
+
+        <!-- Book Appointment Button -->
+        <!-- <a href="appointment.html" class="book-appointment-btn" id="bookAppointmentBtn" style="display: none;">Book an Appointment</a> -->
+        <a href="appointment_firebase.html" class="book-appointment-btn" id="bookAppointmentBtn" style="display: none;">Book an Appointment</a>
+    </div>
+
+    <!-- Firebase JavaScript SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="firebase/firebase-config.js"></script>
+
+    <!-- Your Firebase configuration -->
+    <script>
+      
+
+        // Function to display provider details
+        function showProviderDetails(providerName) {
+            var db = firebase.firestore();
+
+            // Query Firestore to find the document ID associated with the provider name
+            db.collection("Provider").where("Name", "==", providerName).get().then((querySnapshot) => {
+                if (!querySnapshot.empty) {
+                    var docId = querySnapshot.docs[0].id; // Retrieve the document ID
+                    var providerRef = db.collection("Provider").doc(docId); // Get a reference to the document
+
+                    providerRef.get().then((doc) => {
+                        if (doc.exists) {
+                            var providerDetails = doc.data();
+                            // Display provider details
+                            document.getElementById("providerDetails").innerHTML = `
+                                <h2>${providerDetails.Name}</h2>
+                                <p><strong>Email:</strong> ${providerDetails.Email}</p>
+                                <p><strong>Affiliation:</strong> ${providerDetails.Affiliation}</p>
+                                <p><strong>Details:</strong> ${providerDetails.Details}</p>
+                                <p><strong>Website:</strong> <a href="${providerDetails.Website}" target="_blank">${providerDetails.Website}</a></p>
+                            `;
+                            // Show the "Book Appointment" button
+                            document.getElementById("bookAppointmentBtn").style.display = "block";
+                        } else {
+                            console.log("No such document!");
+                        }
+                    }).catch((error) => {
+                        console.log("Error getting document:", error);
+                    });
+                } else {
+                    console.log("No document found for the selected provider name!");
+                }
+            }).catch((error) => {
+                console.log("Error getting documents: ", error);
+            });
+        }
+
+        // Function to display providers for selected department
+        function showProviders() {
+            var department = document.getElementById("departmentSelect").value;
+            var db = firebase.firestore();
+            var providersListHTML = "<h2>Available Providers</h2>";
+
+            db.collection("Provider").where("Department", "==", department).get().then((querySnapshot) => {
+                if (!querySnapshot.empty) {
+                    providersListHTML += "<ul>";
+                    querySnapshot.forEach((doc) => {
+                        var providerName = doc.data().Name;
+                        providersListHTML += `<li><a href="#" onclick="showProviderDetails('${providerName}')">${providerName}</a></li>`;
+                    });
+                    providersListHTML += "</ul>";
+                } else {
+                    providersListHTML = "<p>No providers available for the selected department.</p>";
+                }
+                document.getElementById("providersList").innerHTML = providersListHTML;
+                document.getElementById("providerDetails").innerHTML = ""; // Clear provider details when department changes
+                document.getElementById("bookAppointmentBtn").style.display = "none"; // Hide the "Book Appointment" button
+            }).catch((error) => {
+                console.log("Error getting documents: ", error);
+            });
+        }
+    </script>
+</body>
+</html>

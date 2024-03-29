@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Profile</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="firebase/firebase-config.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        #patient-data {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        strong {
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Home button -->
+    <a href="patient_firebase.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: center;">&larr; Home</a>
+      
+    <h1>View Patient Data</h1>
+    <div id="patient-data"></div>
+
+    <script>
+        
+        // Function to get the signed-in user's email and userType from Realtime Database
+        function getSignedInUserData() {
+            return new Promise((resolve, reject) => {
+                firebase.auth().onAuthStateChanged(user => {
+                    if (user) {
+                        const userId = user.uid;
+                        firebase.database().ref('users/' + userId).once('value', snapshot => {
+                            const userData = snapshot.val();
+                            if (userData && userData.email && userData.userType) {
+                                resolve({ email: userData.email, userType: userData.userType });
+                            } else {
+                                reject(new Error('User data not found'));
+                            }
+                        });
+                    } else {
+                        reject(new Error('User not signed in'));
+                    }
+                });
+            });
+        }
+
+        async function viewPatientData() {
+            try {
+                const { email, userType } = await getSignedInUserData();
+                console.log('Signed-in user email:', email);
+                console.log('User type:', userType);
+                
+                const patientDataDiv = document.getElementById('patient-data');
+
+                // Search for the patient using the signed-in user's email
+                const patientCollectionRef = firebase.firestore().collection('Patient');
+                patientCollectionRef.where('Email', '==', email).get()
+                    .then(querySnapshot => {
+                        if (querySnapshot.empty) {
+                            // No patient found, create a new one
+                            createNewPatient(email, userType);
+                        } else {
+                            querySnapshot.forEach(doc => {
+                                const patientData = doc.data();
+                                patientDataDiv.innerHTML = `
+                                    <h2>Patient Data</h2>
+                                    <p><strong>Name:</strong> ${patientData.Name}</p>
+                                    <p><strong>Birthdate:</strong> ${patientData.Birthdate}</p>
+                                    <p><strong>Age:</strong> ${calculateAge(patientData.Birthdate)}</p>
+                                    <p><strong>Email:</strong> ${patientData.Email}</p>
+                                    <p><strong>Contact:</strong> ${patientData.Contact}</p>
+                                    <p><strong>Address:</strong> ${patientData.Address}</p>
+                                    <p><strong>Allergies:</strong> ${patientData.Allergies}</p>
+                                    <p><strong>Medical History:</strong> ${patientData.MedicalHistory}</p>
+                                    <p><strong>User Type:</strong> ${patientData.UserType}</p>
+                                    <button onclick="editPatientData('${doc.id}', '${patientData.Name}', '${patientData.Age}', '${patientData.Contact}', '${patientData.Address}', '${patientData.Allergies}', '${patientData.MedicalHistory}', '${patientData.Birthdate}')">Edit</button>
+                                `;
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error getting patient data:', error);
+                        patientDataDiv.innerHTML = 'Error getting patient data.';
+                    });
+            } catch (error) {
+                console.error(error.message);
+            }
+        }
+
+        async function createNewPatient(email, userType) {
+            try {
+                const newUser = {
+                    Email: email,
+                    UserType: userType,
+                    Birthdate: '', // Initialize empty birthdate
+                    Age: '', // Initialize empty age
+                    Name: '', // Initialize empty name
+                };
+                await firebase.firestore().collection('Patient').add(newUser);
+                console.log('New patient added.');
+            } catch (error) {
+                console.error('Error creating new patient:', error);
+            }
+        }
+
+        async function editPatientData(docId, name,  age, contact, address, allergies, medicalHistory,birthdate,) {
+            const newName = (name === '') ? prompt('Enter name:') : name;
+            const newContact = prompt('Enter new contact:', contact);
+            const newAddress = prompt('Enter new address:', address);
+            const newAllergies = prompt('Enter new allergies:', allergies);
+            const newMedicalHistory = prompt('Enter new medical history:', medicalHistory);
+            let newBirthdate = '';
+
+            if (!birthdate) {
+                newBirthdate = prompt('Enter birthdate (YYYY-MM-DD):');
+            } else {
+                newBirthdate = birthdate; // Use existing birthdate if available
+            }
+
+             // Calculate new age
+            const newAge = calculateAge(newBirthdate);
+
+            try {
+                await firebase.firestore().collection('Patient').doc(docId).update({
+                    Name: (name === '') ? newName : name, // Only update if name is empty
+                    Contact: newContact,
+                    Address: newAddress,
+                    Allergies: newAllergies,
+                    MedicalHistory: newMedicalHistory,
+                    Birthdate: newBirthdate, // Update birthdate
+                    Age: newAge // Update age
+                });
+                alert('Patient data updated successfully!');
+                // Reload the patient data after update
+                viewPatientData();
+            } catch (error) {
+                console.error('Error updating patient data:', error);
+                alert('Error updating patient data. Please try again.');
+            }
+        }
+
+        // Function to calculate age from birthdate
+        function calculateAge(birthdate) {
+            if (!birthdate) return ''; // Return empty string if birthdate is not available
+            const today = new Date();
+            const dob = new Date(birthdate);
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        // Call viewPatientData function when the page loads
+        viewPatientData();
+    </script>
+</body>
+</html>

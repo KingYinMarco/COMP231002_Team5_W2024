@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Booking System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select,
+        input[type="date"] {
+            width: calc(100% - 10px);
+            padding: 8px;
+            margin: 5px 0 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc; /* Grey color when disabled */
+            cursor: not-allowed; /* Change cursor when disabled */
+        }
+
+
+        #confirmation {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e9f5ec;
+            border: 1px solid #86cc9c;
+        }
+
+        #confirmation p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Home Button -->
+        <a href="index.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: left;">&larr; Home</a>
+      
+        <h1>Appointment Booking System</h1>
+
+       
+        
+        <!-- Appointment booking form -->
+        <div>
+            <label for="name">Your Name:</label>
+            <input type="text" id="name" name="name" autocomplete="name" required>
+        </div>
+
+        <div>
+            <label for="email">Your Email:</label>
+            <input type="email" id="email" name="email" autocomplete="email" required>
+        </div>
+
+        <div>
+            <label for="department">Select Department:</label>
+            <select id="department" name="department" onchange="populateProviders()" required>
+                <option value="">Select Department</option>
+                <option value="Cardiology">Cardiology</option>
+                <option value="Dermatology">Dermatology</option>
+                <option value="Gastroenterology">Gastroenterology</option>
+                <option value="Neurology">Neurology</option>
+                <option value="Orthopedics">Orthopedics</option>
+                <option value="Pediatrics">Pediatrics</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="date">Select Date:</label>
+            <input type="date" id="date" name="date" onchange="populateProviders()" required>
+        </div>
+
+        <div>
+            <label for="time">Select Time:</label>
+            <select id="time" name="time" required>
+                <option value="">Select Time</option>
+                <option value="09:00">9:00 AM</option>
+                <option value="10:00">10:00 AM</option>
+                <option value="11:00">11:00 AM</option>
+                <option value="12:00">12:00 PM</option>
+                <option value="13:00">1:00 PM</option>
+                <option value="14:00">2:00 PM</option>
+                <option value="15:00">3:00 PM</option>
+                <option value="16:00">4:00 PM</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="provider">Select Healthcare Provider:</label>
+            <select id="provider" name="provider">
+                <option value="">Select Provider</option>
+            </select>
+        </div>
+
+        <div>
+            <input type="checkbox" id="sendEmail" name="sendEmail">
+            <label for="sendEmail">Send appointment details via email</label>
+        </div>
+
+        <div>
+            <button id="bookButton" onclick="bookAppointment()" disabled>Book Appointment</button>
+        </div>
+
+        <div id="confirmation"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="firebase/firebase-config.js"></script>
+    <script>
+       
+        // Reference to the Firestore database
+        var db = firebase.firestore();
+
+        // Populate provider dropdown based on selected department
+        function populateProviders() {
+            var department = document.getElementById("department").value;
+            var providerDropdown = document.getElementById("provider");
+            providerDropdown.innerHTML = "<option value=''>Select Provider</option>"; // Clear existing options
+
+            if (department) {
+                // Query Firestore to get providers for the selected department
+                db.collection("Provider").where("Department", "==", department)
+                    .get()
+                    .then((querySnapshot) => {
+                        querySnapshot.forEach((doc) => {
+                            var provider = doc.data().Name; // Assuming the provider name is stored under the field "Name"
+                            var option = document.createElement("option");
+                            option.text = provider;
+                            option.value = provider;
+                            providerDropdown.add(option);
+                        });
+                    })
+                    .catch((error) => {
+                        console.log("Error getting providers: ", error);
+                    });
+            }
+            validateForm(); // Validate form whenever providers are populated
+        }
+
+        // Function to validate form fields and enable/disable booking button
+        function validateForm() {
+            var name = document.getElementById("name").value;
+            var email = document.getElementById("email").value;
+            var department = document.getElementById("department").value;
+            var date = document.getElementById("date").value;
+            var time = document.getElementById("time").value;
+            var provider = document.getElementById("provider").value;
+            var sendEmail = document.getElementById("sendEmail").checked;
+
+            var isValid = name && email && department && date && time && provider;
+
+            if (isValid) {
+                document.getElementById("bookButton").disabled = false;
+            } else {
+                document.getElementById("bookButton").disabled = true;
+            }
+        }
+
+        // Call validateForm whenever input values change
+        document.querySelectorAll('input, select').forEach(item => {
+            item.addEventListener('change', event => {
+                validateForm();
+            })
+        });
+
+        // Function to book appointment
+        function bookAppointment() {
+            var name = document.getElementById("name").value;
+            var email = document.getElementById("email").value;
+            var department = document.getElementById("department").value;
+            var date = document.getElementById("date").value;
+            var time = document.getElementById("time").value;
+            var provider = document.getElementById("provider").value;
+            var sendEmail = document.getElementById("sendEmail").checked;
+
+            // Validate email format
+            var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regular expression for email format
+            if (!emailPattern.test(email)) {
+                alert("Please enter a valid email address.");
+                return;
+            }
+
+            // Validate date not earlier than today
+            var selectedDate = new Date(date);
+            var currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0); // Set time to midnight for accurate comparison
+            if (selectedDate < currentDate) {
+                alert("You cannot book appointments for dates earlier than today.");
+                return;
+            }
+
+            // Save appointment data to Firestore
+            db.collection("Appointments").add({
+                Name: name,
+                Email: email,
+                Department: department,
+                Date: date,
+                Time: time,
+                Provider: provider
+            })
+            .then((docRef) => {
+                // Display confirmation message
+                var confirmationMsg = "<p>Appointment booked successfully!</p>";
+                confirmationMsg += "<p><strong>Name:</strong> " + name + "</p>";
+                confirmationMsg += "<p><strong>Email:</strong> " + email + "</p>";
+                confirmationMsg += "<p><strong>Department:</strong> " + department + "</p>";
+                confirmationMsg += "<p><strong>Date:</strong> " + date + "</p>";
+                confirmationMsg += "<p><strong>Time:</strong> " + time + "</p>";
+                confirmationMsg += "<p><strong>Provider:</strong> " + provider + "</p>";
+                document.getElementById("confirmation").innerHTML = confirmationMsg;
+
+                // Send email if selected
+                if (sendEmail) {
+                    alert("Email sent to " + email);
+                }
+            })
+            .catch((error) => {
+                console.error("Error adding appointment: ", error);
+            });
+        }
+    </script>
+</body>
+</html>
