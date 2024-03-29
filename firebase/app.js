@@ -74,6 +74,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(() => {
                     alert('Registration successful! You can now sign in.');
                     registerForm.reset(); // Reset form fields
+                     // Redirect to sign-in page
+                     window.location.href = 'signin.html'; // Change 'signin.html' to your actual sign-in page URL
                 })
                 .catch(error => {
                     console.error(error.message);
@@ -96,7 +98,8 @@ if (signInForm) {
             .then((userCredential) => {
                 console.log('User signed in');
                 // Redirect to a blank page upon successful sign-in
-                window.location.href = 'index.html'; // Ensure you have a blank.html file
+                // window.location.href = 'index.html'; // Ensure you have a blank.html file
+                window.location.href = 'patient_firebase.html';  //for registered patient
             })
             .catch((error) => {
                 console.error(error);
