@@ -82,21 +82,28 @@
 </head>
 <body>
     <div class="container">
+
         <!-- Home Button -->
-        <a href="patient_dashboard.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: left;">&larr; Home</a>
+        <a href="index.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: left;">&larr; Home</a>
+      
         <h1>Appointment Booking System</h1>
+
+       
+        
         <!-- Appointment booking form -->
         <div>
             <label for="name">Your Name:</label>
             <input type="text" id="name" name="name" autocomplete="name" required>
         </div>
+
         <div>
             <label for="email">Your Email:</label>
-            <input type="email" id="email" name="email" autocomplete="email" required readonly>
+            <input type="email" id="email" name="email" autocomplete="email" required>
         </div>
+
         <div>
             <label for="department">Select Department:</label>
-            <select id="department" name="department" onchange="populateProvidersAndEmail()"  required>
+            <select id="department" name="department" onchange="populateProvidersAndEmail()" required>
                 <option value="">Select Department</option>
                 <option value="Cardiology">Cardiology</option>
                 <option value="Dermatology">Dermatology</option>
@@ -106,10 +113,12 @@
                 <option value="Pediatrics">Pediatrics</option>
             </select>
         </div>
+
         <div>
             <label for="date">Select Date:</label>
-            <input type="date" id="date" name="date" onchange="populateProvidersAndEmail()"  required>
+            <input type="date" id="date" name="date" onchange="populateProvidersAndEmail()" required>
         </div>
+
         <div>
             <label for="time">Select Time:</label>
             <select id="time" name="time" required>
@@ -124,13 +133,13 @@
                 <option value="16:00">4:00 PM</option>
             </select>
         </div>
+
         <div>
             <label for="provider">Select Healthcare Provider:</label>
             <select id="provider" name="provider">
                 <option value="">Select Provider</option>
             </select>
         </div>
-
         <div>
             <label for="providersEmail">Provider's Email</label>
             <select id="providersEmail" name="providersEmail">
@@ -141,110 +150,39 @@
             <input type="checkbox" id="sendEmail" name="sendEmail">
             <label for="sendEmail">Send appointment details via email</label>
         </div>
+
         <div>
             <button id="bookButton" onclick="bookAppointment()" disabled>Book Appointment</button>
         </div>
+
         <div id="confirmation"></div>
     </div>
 
-    <!-- Firebase scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> <!-- Include Firebase Authentication script -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script> <!-- Include Realtime Database script -->
     <script src="firebase/firebase-config.js"></script>
-
     <script>
-          // Reference to the Firestore database
-          var db = firebase.firestore();
-      
        
-       fetchUserEmail();
-        // Function to fetch signed-in user's email from Realtime Database
-                 
-       function fetchUserEmail() {
-            return new Promise((resolve, reject) => {
-            firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                const userId = user.uid;
-                firebase.database().ref('users/' + userId).once('value', snapshot =>  {
-                    const userData = snapshot.val();
-                    if (userData && userData.email) {
-                        const email = userData.email;
-                        resolve(email);
-                        console.log('Fetched Email:', email);
-                        // Call fetchUserName if needed
-                        fetchUserName(email);
-                    } else {
-                        reject(new Error('Email not found in database'));
-                    }
-                    });
-             } else {
-                reject(new Error('User not signed in'));
-                    }
-            });
-         });
-    }
+        // Reference to the Firestore database
+        var db = firebase.firestore();
 
-        // Function to fetch user name based on email from Firestore
-         function fetchUserName(email) {
-             return new Promise((resolve, reject) => {
-             if (!email) {
-            reject(new Error('Email is undefined'));
-            return;
-             }
-                firebase.firestore().collection("Patient").where("Email", "==", email).get()
-                    .then(querySnapshot => {
-                if (!querySnapshot.empty) {
-                    // If a document with matching email is found, resolve with the name
-                    querySnapshot.forEach(doc => {
-                        const name = doc.data().Name;
-                        resolve(name);
-                        console.log("Fetched name for email:", email, "-", name);
-
-                        // Populate name and email fields in the form
-                        document.getElementById("name").value = name;
-                        document.getElementById("email").value = email;
-                    });
-                } else {
-                    // If no matching document is found, resolve with null
-                    resolve(null);
-                    console.log("No user found for email:", email);
-                }
-            })
-            .catch(error => {
-                reject(error);
-                console.error("Error fetching user name:", error);
-                });
-            });
-        }
-
-     
         // Populate provider dropdown based on selected department
         function populateProviders() {
             var department = document.getElementById("department").value;
             var providerDropdown = document.getElementById("provider");
-            var providersEmailDropdown = document.getElementById("providersEmail");
-    
-    providersEmailDropdown.innerHTML = "<option value=''>Select Provider's Email</option>"; // Clear existing options
-
             providerDropdown.innerHTML = "<option value=''>Select Provider</option>"; // Clear existing options
 
             if (department) {
                 // Query Firestore to get providers for the selected department
                 db.collection("Provider").where("Department", "==", department)
-                 .get()
+                    .get()
                     .then((querySnapshot) => {
                         querySnapshot.forEach((doc) => {
                             var provider = doc.data().Name; // Assuming the provider name is stored under the field "Name"
                             var option = document.createElement("option");
-                           // var providerEmail = doc.data().Email; // Assuming the provider email is stored under the field "Email"
-                           // document.getElementById("ProviderEmail").value = providerEmail;
                             option.text = provider;
                             option.value = provider;
                             providerDropdown.add(option);
-                            console.log("Provider added:", provider);
-                            
                         });
                     })
                     .catch((error) => {
@@ -254,20 +192,43 @@
             validateForm(); // Validate form whenever providers are populated
         }
 
+        // Function to validate form fields and enable/disable booking button
+        function validateForm() {
+            var name = document.getElementById("name").value;
+            var email = document.getElementById("email").value;
+            var department = document.getElementById("department").value;
+            var date = document.getElementById("date").value;
+            var time = document.getElementById("time").value;
+            var provider = document.getElementById("provider").value;
+            var providersEmail = document.getElementById("providersEmail").value;
+            var sendEmail = document.getElementById("sendEmail").checked;
 
-        // Populate provider dropdown based on selected department
-         function populateProvidersEmail() {
+            var isValid = name && email && department && date && time && provider;
+
+            if (isValid) {
+                document.getElementById("bookButton").disabled = false;
+            } else {
+                document.getElementById("bookButton").disabled = true;
+            }
+        }
+
+        // Call validateForm whenever input values change
+        document.querySelectorAll('input, select').forEach(item => {
+            item.addEventListener('change', event => {
+                validateForm();
+            })
+        });
+
+
+        function populateProvidersEmail() {
             var department = document.getElementById("department").value;
             var providerDropdown = document.getElementById("provider");
              providerDropdown.innerHTML = "<option value=''>Select Provider</option>"; // Clear existing options
 
             var providersEmailDropdown = document.getElementById("providersEmail");
-    
             providersEmailDropdown.innerHTML = "<option value=''>Select Provider's Email</option>"; // Clear existing options   
 
-
-
-            if (department && provider) {
+            if (department ) {
                 // Query Firestore to get providers for the selected department
                 db.collection("Provider").where("Department", "==", department)
                 
@@ -293,42 +254,8 @@
                         console.log("Error getting providers: ", error);
                     });
             }
-                 validateForm(); // Validate form whenever providers are populated
-         }
-
-
-        function populateProvidersAndEmail() {
-             populateProvidersEmail(); // Call populateProvidersEmail() function
-             populateProviders(); // Call populateProviders() function
-    
+            validateForm(); // Validate form whenever providers are populated
         }
-
-        // Function to validate form fields and enable/disable booking button
-        function validateForm() {
-            var name = document.getElementById("name").value;
-            var email = document.getElementById("email").value;
-            var department = document.getElementById("department").value;
-            var date = document.getElementById("date").value;
-            var time = document.getElementById("time").value;
-            var provider = document.getElementById("provider").value;
-            var providersEmail = document.getElementById("providersEmail").value;
-            var sendEmail = document.getElementById("sendEmail").checked;
-
-            var isValid = name && email && department && date && time && provider && providersEmail;
-
-            if (isValid) {
-                document.getElementById("bookButton").disabled = false;
-            } else {
-                document.getElementById("bookButton").disabled = true;
-            }
-        }
-
-        // Call validateForm whenever input values change
-        document.querySelectorAll('input, select').forEach(item => {
-            item.addEventListener('change', event => {
-                validateForm();
-            })
-        });
 
         // Function to book appointment
         function bookAppointment() {
@@ -348,16 +275,14 @@
                 return;
             }
 
-           
-            // Validate date not earlier than today & allow same day appointment
-            var selectedDateTime = new Date(date + 'T' + time); // Combine date and time
-            var currentDateTime = new Date();
-            if (selectedDateTime < currentDateTime) {
-            alert("You cannot book appointments for dates and time earlier than today.");
-             return;
+            // Validate date not earlier than today
+            var selectedDate = new Date(date);
+            var currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0); // Set time to midnight for accurate comparison
+            if (selectedDate < currentDate) {
+                alert("You cannot book appointments for dates earlier than today.");
+                return;
             }
-
-
 
             // Save appointment data to Firestore
             db.collection("Appointments").add({
@@ -385,18 +310,17 @@
                 if (sendEmail) {
                     alert("Email sent to " + email);
                 }
-                
                 resetForm(); // Reset the form after successful booking
             })
             .catch((error) => {
                 console.error("Error adding appointment: ", error);
             });
 
-            validateProvidersEmail(provider, providersEmail);
-        }
 
-        // Function to reset the form fields
-        function resetForm() {
+               // Function to reset the form fields
+          function resetForm() {
+            document.getElementById("name").value = "";
+            document.getElementById("email").value = "";
             document.getElementById("department").value = "";
             document.getElementById("date").value = "";
             document.getElementById("time").value = "";
@@ -404,40 +328,16 @@
             document.getElementById("providersEmail").value = "";
             document.getElementById("sendEmail").checked = false;
             validateForm(); // Re-validate the form after resetting
+            }
         }
 
-        // Function to validate that the selected provider's email corresponds to the chosen provider name and department
-        function validateProvidersEmail(provider, providersEmail) {
-            var department = document.getElementById("department").value;
 
-            return new Promise((resolve, reject) => {
-                if (!department || !provider || !providersEmail) {
-                    reject(new Error('Missing required fields'));
-                    return;
-                }
-
-                // Query Firestore to get providers for the selected department, name, and email
-                db.collection("Provider")
-                    .where("Department", "==", department && "Name", "==", provider && "Email", "==", providersEmail)
-                    .get()
-                    .then((querySnapshot) => {
-                        if (querySnapshot.empty) {
-                            resolve(false); // No matching provider found
-                        } else if (querySnapshot.size > 1) {
-                            resolve(false); // Multiple matching providers found
-                        } else {
-                            resolve(true); // Valid provider's email found
-                        }
-                        console.log("valid Provider email:", providersEmail);
-                        console.log("valid Provider name:", provider);
-                        console.log("valid Department:", department);
-                    })
-                    .catch((error) => {
-                        console.error("Error validating provider's email: ", error);
-                        reject(error);
-                    });
-            });
-        }
+        function populateProvidersAndEmail() {
+            populateProviders(); // Call populateProviders() function
+            populateProvidersEmail(); // Call populateProvidersEmail() function
+   
+       
+}
 
     </script>
 </body>

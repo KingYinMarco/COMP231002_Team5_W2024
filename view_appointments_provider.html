@@ -63,13 +63,11 @@
 <body>
     <div class="container">
 
-         <!-- Home button -->
-    <a href="patient_dashboard.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: center;">&larr; Home</a>
+        <!-- Home button -->
+        <a href="provider_dashboard.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: center;">&larr; Home</a>
         <h1><i class="bi bi-calendar-check"></i> Your Appointments</h1>
         <div class="row justify-content-around" id="appointments-list"></div>
     </div>
-
-   
 
     <script>
         var db = firebase.firestore();
@@ -104,7 +102,7 @@
 
                 const appointmentsList = document.getElementById('appointments-list');
                 const appointmentCollectionRef = firebase.firestore().collection('Appointments');
-                appointmentCollectionRef.where('Email', '==', userEmail).get()
+                appointmentCollectionRef.where('ProvidersEmail', '==', userEmail).get()
                     .then(querySnapshot => {
                         if (querySnapshot.empty) {
                             const noAppointmentsMessage = document.createElement('p');
@@ -133,6 +131,7 @@
                                         <p class="card-text"><strong>Time:</strong> ${appointmentData.Time}</p>
                                         <p class="card-text"><strong>Provider:</strong> ${appointmentData.Provider}</p>
                                         <p class="card-text"><strong>Provider's Email:</strong> ${appointmentData.ProvidersEmail}</p>
+                                        <button class="btn btn-primary" onclick="viewPatientProfile('${appointmentData.Email}')">View Patient Profile</button>
                                     </div>
                                 `;
                                 appointmentsList.appendChild(appointmentCard);
@@ -146,6 +145,44 @@
                 console.error(error.message);
             }
         }
+        
+        async function viewPatientProfile(Email) {
+    try {
+        const patientCollectionRef = firebase.firestore().collection('Patient');
+        const querySnapshot = await patientCollectionRef.where('Email', '==', Email).get();
+
+        if (querySnapshot.empty) {
+            console.log('Patient profile not found');
+            alert('Patient profile not found');
+            return;
+        }
+
+        querySnapshot.forEach(doc => {
+            const patientData = doc.data();
+            console.log('Patient Profile:', patientData);
+            displayPatientProfile(patientData);
+        });
+    } catch (error) {
+        console.error('Error getting patient profile:', error);
+        alert('Error getting patient profile');
+    }
+}
+
+// Function to display patient profile data
+function displayPatientProfile(patientData) {
+    // You can customize this to display the data as per your requirement
+    
+    console.log(`Patient Name: ${patientData.Name}, Birthdate: ${patientData.Birthdate}, Email: ${patientData.Email}`);
+    window.open(`patient_profile.html?email=${patientData.Email}`, '_blank');
+     
+   
+}
+
+function openPatientProfile() {
+            window.open(`patient_profile.html?email=${patientData.Email}`, '_blank');
+            console.log
+        }
+
 
         // Call viewAppointments function when the page loads
         viewAppointments();

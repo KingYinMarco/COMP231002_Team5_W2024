@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Profile</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="firebase/firebase-config.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        #provider-data {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        strong {
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Home button -->
+    <a href="provider_dashboard.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: center;">&larr; Home</a>
+      
+    <h1>Provider Data</h1>
+    <div id="provider-data"></div>
+
+    <script>
+        
+        // Function to get the signed-in user's email from Firebase Authentication
+        function getSignedInUserEmail() {
+            return new Promise((resolve, reject) => {
+                firebase.auth().onAuthStateChanged(user => {
+                    if (user) {
+                        resolve(user.email);
+                    } else {
+                        reject(new Error('User not signed in'));
+                    }
+                });
+            });
+        }
+       
+
+            // Function to get the signed-in user's email and userType from Realtime Database
+            function getSignedInUserData() {
+            return new Promise((resolve, reject) => {
+                firebase.auth().onAuthStateChanged(user => {
+                    if (user) {
+                        const userId = user.uid;
+                        firebase.database().ref('users/' + userId).once('value', snapshot => {
+                            const userData = snapshot.val();
+                            if (userData && userData.email && userData.userType) {
+                               // resolve({ email: userData.email, userType: userData.userType });
+                               resolve({ userType: userData.userType });
+                            } else {
+                                reject(new Error('User data not found'));
+                            }
+                        });
+                    } else {
+                        reject(new Error('User not signed in'));
+                    }
+                });
+            });
+        }
+
+  
+         async function viewProviderData() {
+            try {  
+                const email = await getSignedInUserEmail();
+                console.log('Signed-in user email:', email);
+                const {  userType } = await getSignedInUserData();
+                console.log('User type:', userType);
+              
+                //if userType is healthcareProvider, do not create account and 
+                //alert user and redirect to main_dashboard.html
+                if (userType === "patient") { 
+                alert("You are not authorized to view provider data.");
+                window.location.href = "main_dashboard.html";
+           
+                return; // Stop further execution
+            }   
+
+
+
+
+
+
+                
+            
+                //if userType is patient, do not create account and alert user and redirect to main_dashboard.html
+                if (userType === "patient") { 
+                     alert("You are not authorized to view provider data.");
+                     window.location.href = "main_dashboard.html";
+                     return; // Stop further execution
+                }   
+
+                
+                const providerDataDiv = document.getElementById('provider-data');
+
+        
+
+
+
+
+                // Search for the provider using the signed-in user's email
+                const providerCollectionRef = firebase.firestore().collection('Provider');
+                providerCollectionRef.where('Email', '==', email).get()
+                    .then(querySnapshot => {
+                        if (querySnapshot.empty) {
+                            // No provider found, create a new one
+                            createNewProvider(email);
+                        } else {
+                            querySnapshot.forEach(doc => {
+                                const providerData = doc.data();
+                                let departmentHTML = '';
+                                if (isEditMode()) {
+                                    departmentHTML = `
+                                        <select id="department-select">
+                                            <option value="Cardiology" ${providerData.Department === 'Cardiology' ? 'selected' : ''}>Cardiology</option>
+                                            <option value="Dermatology" ${providerData.Department === 'Dermatology' ? 'selected' : ''}>Dermatology</option>
+                                            <option value="Gastroenterology" ${providerData.Department === 'Gastroenterology' ? 'selected' : ''}>Gastroenterology</option>
+                                            <option value="Pediatrics" ${providerData.Department === 'Pediatrics' ? 'selected' : ''}>Pediatrics</option>
+                                            <option value="Orthopedics" ${providerData.Department === 'Orthopedics' ? 'selected' : ''}>Orthopedics</option>
+                                            <option value="Neurology" ${providerData.Department === 'Neurology' ? 'selected' : ''}>Neurology</option>
+                                        </select>
+                                    `;
+                                } else {
+                                    departmentHTML = `<span>${providerData.Department}</span>`;
+                                }
+                                providerDataDiv.innerHTML = `
+                                    <h2>Provider Data</h2>
+                                    <p><strong>Affiliation:</strong> ${providerData.Affiliation}</p>
+                                    <p><strong>Department:</strong> ${departmentHTML}</p>
+                                    <p><strong>Details:</strong> ${providerData.Details}</p>
+                                    <p><strong>Email:</strong> ${providerData.Email}</p>
+                                    <p><strong>Name:</strong> ${providerData.Name}</p>
+                                    <p><strong>Website:</strong> ${providerData.Website}</p>
+                                    <button onclick="editProviderData('${doc.id}', '${providerData.Affiliation}', '${providerData.Department}', '${providerData.Details}', '${providerData.Email}', '${providerData.Name}', '${providerData.Website}')">${isEditMode() ? 'Edit' : 'Save Changes'}</button>
+                                `;
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error getting provider data:', error);
+                        providerDataDiv.innerHTML = 'Error getting provider data.';
+                    });
+            } catch (error) {
+                console.error(error.message);
+            }
+        }
+
+
+  
+
+        async function createNewProvider(email) {
+            try {
+                const newProvider = {
+                    Affiliation: '', // Initialize empty affiliation
+                    Department: '', // Initialize empty department
+                    Details: '', // Initialize empty details
+                    Email: email,
+                    Name: '', // Initialize empty name
+                    Website: '' // Initialize empty website
+                };
+                await firebase.firestore().collection('Provider').add(newProvider);
+                console.log('New provider added.');
+                // Reload the page to show the newly added provider
+                location.reload();
+            } catch (error) {
+                console.error('Error creating new provider:', error);
+            }
+        }
+
+        async function editProviderData(docId, affiliation, department, details, email, name, website) {
+            let newName = name; // Initialize newName with the current name
+            if (!name) { // If the name is not set
+                newName = prompt('Enter name:');
+            }
+            const newAffiliation = prompt('Enter new affiliation:', affiliation);
+            const newDepartment = isEditMode() ? document.getElementById('department-select').value : department;
+            const newDetails = prompt('Enter new details:', details);
+            const newWebsite = prompt('Enter new website:', website);
+
+            try {
+                await firebase.firestore().collection('Provider').doc(docId).update({
+                    Affiliation: newAffiliation,
+                    Department: newDepartment,
+                    Details: newDetails,
+                    Email: email, // Email cannot be changed
+                    Name: newName,
+                    Website: newWebsite
+                });
+                alert('Provider data updated successfully!');
+                // Reload the provider data after update
+                viewProviderData();
+            } catch (error) {
+                console.error('Error updating provider data:', error);
+                alert('Error updating provider data. Please try again.');
+            }
+        }
+
+        let editMode = true;
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            viewProviderData(); // Refresh provider data based on edit mode
+        }
+
+        function isEditMode() {
+            return editMode;
+        }
+
+        // Call viewProviderData function when the page loads
+        viewProviderData();
+    </script>
+</body>
+</html>
