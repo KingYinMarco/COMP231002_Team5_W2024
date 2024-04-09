@@ -62,18 +62,13 @@
 </head>
 <body>
     <div class="container">
-
-         <!-- Home button -->
-    <a href="patient_dashboard.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: center;">&larr; Home</a>
+        <!-- Home button -->
+        <a href="patient_dashboard.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: center;">&larr; Home</a>
         <h1><i class="bi bi-calendar-check"></i> Your Appointments</h1>
         <div class="row justify-content-around" id="appointments-list"></div>
     </div>
 
-   
-
     <script>
-        var db = firebase.firestore();
-
         // Function to get the signed-in user's email and userType from Realtime Database
         function getSignedInUserData() {
             return new Promise((resolve, reject) => {
@@ -98,10 +93,7 @@
         async function viewAppointments() {
             try {
                 const signedInUserData = await getSignedInUserData();
-                console.log('Signed-in user:', signedInUserData);
-
                 const userEmail = signedInUserData.email;
-
                 const appointmentsList = document.getElementById('appointments-list');
                 const appointmentCollectionRef = firebase.firestore().collection('Appointments');
                 appointmentCollectionRef.where('Email', '==', userEmail).get()
@@ -112,17 +104,10 @@
                             noAppointmentsMessage.classList.add('no-appointments');
                             appointmentsList.appendChild(noAppointmentsMessage);
                         } else {
-                            console.log('Appointments fetched:');
-                            const currentDate = new Date();
                             querySnapshot.forEach(doc => {
                                 const appointmentData = doc.data();
-                                console.log(appointmentData); // Log appointment data
-
-                                // Check if the appointment date is in the past
                                 const appointmentDate = new Date(appointmentData.Date);
-                                const isPastAppointment = appointmentDate < currentDate;
-
-                                // Create custom appointment card with background color
+                                const isPastAppointment = appointmentDate < new Date();
                                 const appointmentCard = document.createElement('div');
                                 appointmentCard.classList.add('card', 'custom-card', 'appointment-card', 'col-md-4', 'col-sm-6', isPastAppointment ? 'past-appointment' : 'upcoming-appointment');
                                 appointmentCard.innerHTML = `
@@ -133,6 +118,7 @@
                                         <p class="card-text"><strong>Time:</strong> ${appointmentData.Time}</p>
                                         <p class="card-text"><strong>Provider:</strong> ${appointmentData.Provider}</p>
                                         <p class="card-text"><strong>Provider's Email:</strong> ${appointmentData.ProvidersEmail}</p>
+                                        <button class="btn btn-primary" onclick="editAppointment('${doc.id}')">Edit Appointment</button>
                                     </div>
                                 `;
                                 appointmentsList.appendChild(appointmentCard);
@@ -145,6 +131,12 @@
             } catch (error) {
                 console.error(error.message);
             }
+        }
+
+        // Function to handle editing appointments
+        function editAppointment(appointmentId) {
+            // Redirect to the edit appointment page with the appointment ID
+            window.location.href = `edit_appointment.html?id=${appointmentId}`;
         }
 
         // Call viewAppointments function when the page loads
