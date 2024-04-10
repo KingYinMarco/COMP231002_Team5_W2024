@@ -109,6 +109,7 @@
                                 const appointmentDate = new Date(appointmentData.Date);
                                 const isPastAppointment = appointmentDate < new Date();
                                 const appointmentCard = document.createElement('div');
+                                appointmentCard.id = doc.id; // Set appointment ID as card ID
                                 appointmentCard.classList.add('card', 'custom-card', 'appointment-card', 'col-md-4', 'col-sm-6', isPastAppointment ? 'past-appointment' : 'upcoming-appointment');
                                 appointmentCard.innerHTML = `
                                     <div class="card-header custom-card-header">${appointmentData.Department}</div>
@@ -118,7 +119,13 @@
                                         <p class="card-text"><strong>Time:</strong> ${appointmentData.Time}</p>
                                         <p class="card-text"><strong>Provider:</strong> ${appointmentData.Provider}</p>
                                         <p class="card-text"><strong>Provider's Email:</strong> ${appointmentData.ProvidersEmail}</p>
-                                        <button class="btn btn-primary" onclick="editAppointment('${doc.id}')">Edit Appointment</button>
+                                        <!-- Wrap buttons in a div for horizontal alignment -->
+                                        <div class="d-flex justify-content-between">
+                                            <!-- Edit Appointment button -->
+                                            <button class="btn btn-primary" onclick="editAppointment('${doc.id}')">Update</button>
+                                            <!-- Cancel Appointment button -->
+                                            <button class="btn btn-danger ml-2" onclick="cancelAppointment('${doc.id}')">Cancel</button>
+                                        </div>
                                     </div>
                                 `;
                                 appointmentsList.appendChild(appointmentCard);
@@ -137,6 +144,25 @@
         function editAppointment(appointmentId) {
             // Redirect to the edit appointment page with the appointment ID
             window.location.href = `edit_appointment.html?id=${appointmentId}`;
+        }
+
+        // Function to handle canceling appointments
+        function cancelAppointment(appointmentId) {
+            if (confirm("Are you sure you want to cancel this appointment?")) {
+                const appointmentRef = firebase.firestore().collection('Appointments').doc(appointmentId);
+                appointmentRef.delete()
+                    .then(() => {
+                        // Remove the card from the UI
+                        const appointmentCard = document.getElementById(appointmentId);
+                        if (appointmentCard) {
+                            appointmentCard.remove();
+                            alert("Appointment canceled successfully.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error canceling appointment:", error);
+                    });
+            }
         }
 
         // Call viewAppointments function when the page loads
