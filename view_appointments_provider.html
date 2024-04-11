@@ -58,6 +58,18 @@
         .custom-card-body {
             background-color: #f8f9fa;
         }
+
+       /* Adjustments for buttons */
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .btn-container button {
+            flex: 1;
+            width: calc(50% - 5px); /* Set button width */
+        }
     </style>
 </head>
 <body>
@@ -131,7 +143,8 @@
                                         <p class="card-text"><strong>Time:</strong> ${appointmentData.Time}</p>
                                         <p class="card-text"><strong>Provider:</strong> ${appointmentData.Provider}</p>
                                         <p class="card-text"><strong>Provider's Email:</strong> ${appointmentData.ProvidersEmail}</p>
-                                        <button class="btn btn-primary" onclick="viewPatientProfile('${appointmentData.Email}')">View Patient Profile</button>
+                                        <button class="btn btn-primary" onclick="viewPatientProfile('${appointmentData.Email}')">Patient Profile</button>
+                                        <button class="btn btn-danger ml-2" onclick="cancelAppointment('${doc.id}')">Cancel</button>
                                     </div>
                                 `;
                                 appointmentsList.appendChild(appointmentCard);
@@ -145,6 +158,9 @@
                 console.error(error.message);
             }
         }
+
+
+       
         
         async function viewPatientProfile(Email) {
     try {
@@ -183,6 +199,26 @@ function openPatientProfile() {
             console.log
         }
 
+          // Function to handle canceling appointments
+          function cancelAppointment(appointmentId) {
+            if (confirm("Are you sure you want to cancel this appointment?")) {
+                const appointmentRef = firebase.firestore().collection('Appointments').doc(appointmentId);
+                appointmentRef.delete()
+                    .then(() => {
+                        // Remove the card from the UI
+                        const appointmentCard = document.getElementById(appointmentId);
+                        if (appointmentCard) {
+                            appointmentCard.remove();
+                            console.log("Appointment canceled successfully.");
+                            window.location.href = `view_appointment_provider.html`
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error canceling appointment:", error);
+                    });
+            }
+            
+        }
 
         // Call viewAppointments function when the page loads
         viewAppointments();

@@ -52,6 +52,12 @@
             background-color: #28a745;
             color: #fff;
         }
+
+        .view-calendar {
+            background-color: #e7c51b;
+            color: #fff;
+        }
+        
     </style>
 </head>
 <body>
@@ -70,12 +76,22 @@
             <div class="col-md-4">
                 <div class="card action-card view-appointments" onclick="viewAppointments()">
                     <div class="card-body text-center">
-                        <i class="bi bi-calendar-check" style="font-size: 3rem;"></i>
+                        <i class="bi bi-journal-medical" style="font-size: 3rem;"></i>
                         <h5 class="card-title">View Appointments</h5>
                     </div>
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="card action-card view-calendar" onclick="viewMyCalendar()">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar2-check-fill" style="font-size: 3rem;"></i>
+                        <h5 class="card-title">My Calendar</h5>
+                    </div>
+                </div>
+            </div>
             <!-- Add more cards for additional actions -->
+
+            
         </div>
 
         <!-- Sign Out Button -->
@@ -93,6 +109,11 @@
         function viewAppointments() {
             // Redirect to view appointments page
             window.location.href = 'view_appointments_provider.html'; 
+        }
+
+        function viewMyCalendar() {
+            // Redirect to view appointments page
+            window.location.href = 'provider_calendar_view.html'; 
         }
 
         function signOut() {

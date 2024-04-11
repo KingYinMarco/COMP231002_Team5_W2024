@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Calendar</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="firebase/firebase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 10;
+            padding: 10px; 
+            display: flex; 
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            margin-right: 10px; 
+            display: flex; 
+            align-items: stretch; /* Added to stretch items to full width */
+            
+        }
+
+        .month-menu {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #fff;
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(0, 1, 0, 0.1);
+            transition: background-color 0.3s ease; /* Added transition effect */
+          
+        }
+        
+        .month-menu:hover {
+            background-color: #e9efef; /* Change background color on hover */
+        }
+
+
+        .month-menu a {
+            display: block;
+            margin-bottom: 5px;
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .month-menu a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .appointment-details {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-right: 10px; /* Adjusted margin to move it to the left */
+           
+        }
+
+        .appointment-table {
+            width: 100%;
+        }
+
+        .table th,
+        .table td {
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .booked {
+            background-color: #ff5252;
+            color: white;
+        }
+
+        .available {
+            background-color: #66bb6a;
+            color: white;
+        }
+
+        .no-appointments {
+            text-align: center;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <!-- Home button -->
+   
+    <div class="container">
+        
+        <div class="month-menu" id="monthMenu">
+            <a href="provider_dashboard.html" style="text-decoration: none; color: #007bff; margin-bottom: 20px; display: block; text-align: center;">&larr; Home</a>
+            <h5 class="text-center mb-3">Select a Month</h5>
+            <a href="#" class="month-link" data-month="1">January</a>
+            <a href="#" class="month-link" data-month="2">February</a>
+            <a href="#" class="month-link" data-month="3">March</a>
+            <a href="#" class="month-link" data-month="4">April</a>
+            <a href="#" class="month-link" data-month="5">May</a>
+            <a href="#" class="month-link" data-month="6">June</a>
+            <a href="#" class="month-link" data-month="7">July</a>
+            <a href="#" class="month-link" data-month="8">August</a>
+            <a href="#" class="month-link" data-month="9">September</a>
+            <a href="#" class="month-link" data-month="10">October</a>
+            <a href="#" class="month-link" data-month="11">November</a>
+            <a href="#" class="month-link" data-month="12">December</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="appointment-details" id="appointmentDetails">
+            <!-- Appointment details will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        var db = firebase.firestore();
+
+        // Function to get the signed-in user's email and userType from Realtime Database
+        function getSignedInUserData() {
+            return new Promise((resolve, reject) => {
+                firebase.auth().onAuthStateChanged(user => {
+                    if (user) {
+                        const userId = user.uid;
+                        firebase.database().ref('users/' + userId).once('value', snapshot => {
+                            const userData = snapshot.val();
+                            if (userData && userData.email && userData.userType) {
+                                resolve({ email: userData.email, userType: userData.userType });
+                            } else {
+                                reject(new Error('User data not found'));
+                            }
+                        });
+                    } else {
+                        reject(new Error('User not signed in'));
+                    }
+                });
+            });
+        }
+
+        async function viewAppointments(month) {
+            try {
+                // Fetch appointments for the selected month and display them in the appointment details section
+                const signedInUserData = await getSignedInUserData();
+                console.log('Signed-in user:', signedInUserData);
+
+                const userEmail = signedInUserData.email;
+                const currentYear = new Date().getFullYear();
+
+                const monthName = new Date(currentYear, month - 1).toLocaleString('default', { month: 'long' });
+                const daysInMonth = new Date(currentYear, month, 0).getDate(); // Get number of days in the current month
+
+                const appointmentCollectionRef = firebase.firestore().collection('Appointments');
+                const querySnapshot = await appointmentCollectionRef.where('ProvidersEmail', '==', userEmail).get();
+
+                const table = document.createElement('table');
+                table.classList.add('table', 'table-bordered', 'appointment-table');
+
+                // Create table header with month and year
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                const headerCell = document.createElement('th');
+                headerCell.colSpan = daysInMonth + 1; // Days in month + 1 for spacing
+                headerCell.textContent = `${monthName} ${currentYear}`;
+                headerRow.appendChild(headerCell);
+                thead.appendChild(headerRow);
+
+                // Create sub-header row with dates
+                const dateRow = document.createElement('tr');
+                dateRow.appendChild(document.createElement('td')); // Empty cell for spacing
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dateCell = document.createElement('td');
+                    dateCell.textContent = i;
+                    dateRow.appendChild(dateCell);
+                }
+                thead.appendChild(dateRow);
+                table.appendChild(thead);
+
+                // Create row for days of the week
+                const daysRow = document.createElement('tr');
+                daysRow.appendChild(document.createElement('td')); // Empty cell for spacing
+                const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const date = new Date(currentYear, month - 1, i);
+                    const dayOfWeek = daysOfWeek[date.getDay()];
+                    const dayCell = document.createElement('td');
+                    dayCell.textContent = dayOfWeek;
+                    daysRow.appendChild(dayCell);
+                }
+                thead.appendChild(daysRow);
+                table.appendChild(thead);
+
+                // Create table body
+                const tbody = document.createElement('tbody');
+                for (let i = 9; i <= 16; i++) { // Assuming appointments can be scheduled from 9 AM to 4 PM
+                    const timeIndex = i - 9;
+                    const row = document.createElement('tr');
+                    const timeCell = document.createElement('td');
+                    timeCell.textContent = i.toString().padStart(2, '0') + ':00'; // Display time vertically
+                    row.appendChild(timeCell);
+                    for (let j = 1; j <= daysInMonth; j++) {
+                        const cell = document.createElement('td');
+                        const dateStr = `${currentYear}-${month.toString().padStart(2, '0')}-${j.toString().padStart(2, '0')}`;
+                        const date = new Date(dateStr);
+                        const isBooked = querySnapshot.docs.some(doc => {
+                            const appointmentDate = new Date(doc.data().Date);
+                            const appointmentDateString = appointmentDate.toISOString().split('T')[0]; // Get date string in YYYY-MM-DD format
+                            const cellDateString = date.toISOString().split('T')[0]; // Get date string in YYYY-MM-DD format
+                            return appointmentDateString === cellDateString && parseInt(doc.data().Time.split(':')[0]) === i;
+                        });
+                        cell.className = isBooked ? 'booked' : 'available';
+                        cell.textContent = isBooked ? 'Booked' : 'Available';
+                        row.appendChild(cell);
+                    }
+                    tbody.appendChild(row);
+                }
+                table.appendChild(tbody);
+                document.getElementById('appointmentDetails').innerHTML = ''; // Clear previous details
+                document.getElementById('appointmentDetails').appendChild(table);
+            } catch (error) {
+                console.error(error.message);
+            }
+        }
+
+        // Add click event listener to month links
+        const monthLinks = document.querySelectorAll('.month-link');
+        monthLinks.forEach(link => {
+            link.addEventListener('click', (event) => {
+                const selectedMonth = parseInt(event.target.dataset.month);
+                viewAppointments(selectedMonth);
+            });
+        });
+
+        // Initially show appointments for the current month
+        const currentMonth = new Date().getMonth() + 1;
+        viewAppointments(currentMonth);
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
