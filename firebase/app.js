@@ -99,7 +99,7 @@ if (signInForm) {
                 console.log('User signed in');
                 // Redirect to a blank page upon successful sign-in
                 // window.location.href = 'index.html'; // Ensure you have a blank.html file
-                window.location.href = 'patient_firebase.html';  //for registered patient
+                window.location.href = 'main_dashboard.html';  //for registered users
             })
             .catch((error) => {
                 console.error(error);
@@ -109,5 +109,6 @@ if (signInForm) {
                     alert('Failed to sign in. Please check your email and password and try again.');
                 }
             });
-    });
+        });
 }
+
