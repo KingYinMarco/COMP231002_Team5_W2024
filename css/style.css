@@ -474,11 +474,35 @@ a:focus {
   min-height: 550px;
 }
 
+
+
 .banner .block {
   padding: 80px 0px 160px;
 }
 
 .banner .block h1 {
+  font-size: 60px;
+  line-height: 1.2;
+  letter-spacing: -1.2px;
+  text-transform: capitalize;
+  color: #223a66;
+}
+
+
+.banner1 {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  background: url("../images/bg/slider_main_bg.jpg") no-repeat;
+  background-size: cover;
+  min-height: 550px;
+}
+
+.banner1 .block {
+  padding: 80px 0px 160px;
+}
+
+.banner1 .block h1 {
   font-size: 60px;
   line-height: 1.2;
   letter-spacing: -1.2px;
