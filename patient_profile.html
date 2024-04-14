@@ -110,7 +110,7 @@
                     <p><strong>Birthdate:</strong> ${patientData.Birthdate}</p>
                     <p><strong>Email:</strong> ${patientData.Email}</p>
                     <p><strong>Age:</strong> ${calculateAge(patientData.Birthdate)}</p>
-                    <p><strong>Contact:</strong> ${calculateAge(patientData.Contact)}</p>
+                    <p><strong>Contact:</strong> ${(patientData.Contact)}</p>
                     <p><strong>Medical History:</strong> ${patientData.MedicalHistory || 'N/A'}</p>
                     <p><strong>Allergies:</strong> ${patientData.Allergies|| 'N/A'}</p>
                 `;
